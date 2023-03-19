@@ -1,0 +1,129 @@
+Base::Base() [base object constructor]:
+        push    rbp
+        mov     rbp, rsp
+        sub     rsp, 16
+        mov     QWORD PTR [rbp-8], rdi
+        mov     edx, OFFSET FLAT:vtable for Base+16
+        mov     rax, QWORD PTR [rbp-8]
+        mov     QWORD PTR [rax], rdx
+        mov     rax, QWORD PTR [rbp-8]
+        mov     rdi, rax
+        call    Base::metoda()
+        nop
+        leave
+        ret
+.LC0:
+        .string "ja sam bazna implementacija!"
+Base::virtualnaMetoda():
+        push    rbp
+        mov     rbp, rsp
+        sub     rsp, 16
+        mov     QWORD PTR [rbp-8], rdi
+        mov     edi, OFFSET FLAT:.LC0
+        call    puts
+        nop
+        leave
+        ret
+.LC1:
+        .string "Metoda kaze: "
+Base::metoda():
+        push    rbp
+        mov     rbp, rsp
+        sub     rsp, 16
+        mov     QWORD PTR [rbp-8], rdi
+        mov     edi, OFFSET FLAT:.LC1
+        mov     eax, 0
+        call    printf
+        mov     rax, QWORD PTR [rbp-8]
+        mov     rax, QWORD PTR [rax]
+        mov     rdx, QWORD PTR [rax]
+        mov     rax, QWORD PTR [rbp-8]
+        mov     rdi, rax
+        call    rdx
+        nop
+        leave
+        ret
+Derived::Derived() [base object constructor]:
+        push    rbp
+        mov     rbp, rsp
+        sub     rsp, 16
+        mov     QWORD PTR [rbp-8], rdi
+        mov     rax, QWORD PTR [rbp-8]
+        mov     rdi, rax
+        call    Base::Base() [base object constructor]
+        mov     edx, OFFSET FLAT:vtable for Derived+16
+        mov     rax, QWORD PTR [rbp-8]
+        mov     QWORD PTR [rax], rdx
+        mov     rax, QWORD PTR [rbp-8]
+        mov     rdi, rax
+        call    Base::metoda()
+        nop
+        leave
+        ret
+.LC2:
+        .string "ja sam izvedena implementacija!"
+Derived::virtualnaMetoda():
+        push    rbp
+        mov     rbp, rsp
+        sub     rsp, 16
+        mov     QWORD PTR [rbp-8], rdi
+        mov     edi, OFFSET FLAT:.LC2
+        call    puts
+        nop
+        leave
+        ret
+main:
+        push    rbp
+        mov     rbp, rsp
+        push    r13
+        push    r12
+        push    rbx
+        sub     rsp, 24
+        mov     edi, 8
+        call    operator new(unsigned long)
+        mov     rbx, rax
+        mov     r13d, 1
+        mov     rdi, rbx
+        call    Derived::Derived() [complete object constructor]
+        mov     QWORD PTR [rbp-40], rbx
+        mov     rax, QWORD PTR [rbp-40]
+        mov     rdi, rax
+        call    Base::metoda()
+        mov     eax, 0
+        jmp     .L11
+        mov     r12, rax
+        test    r13b, r13b
+        je      .L9
+        mov     esi, 8
+        mov     rdi, rbx
+        call    operator delete(void*, unsigned long)
+.L9:
+        mov     rax, r12
+        mov     rdi, rax
+        call    _Unwind_Resume
+.L11:
+        add     rsp, 24
+        pop     rbx
+        pop     r12
+        pop     r13
+        pop     rbp
+        ret
+vtable for Derived:
+        .quad   0
+        .quad   typeinfo for Derived
+        .quad   Derived::virtualnaMetoda()
+vtable for Base:
+        .quad   0
+        .quad   typeinfo for Base
+        .quad   Base::virtualnaMetoda()
+typeinfo for Derived:
+        .quad   vtable for __cxxabiv1::__si_class_type_info+16
+        .quad   typeinfo name for Derived
+        .quad   typeinfo for Base
+typeinfo name for Derived:
+        .string "7Derived"
+typeinfo for Base:
+        .quad   vtable for __cxxabiv1::__class_type_info+16
+        .quad   typeinfo name for Base
+typeinfo name for Base:
+        .string "4Base"
