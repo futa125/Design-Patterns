@@ -1,0 +1,7 @@
+PlainOldClass: 4 Bytes
+- int variable (4 bytes)
+
+CoolClass: 16 bytes
+- int variable (4 bytes)
+- padding to reach 8 byte increments (4 bytes) 
+- pointer to virtual function table (64 bits/8 bytes on x64, 32 bits/4 bytes on x86)

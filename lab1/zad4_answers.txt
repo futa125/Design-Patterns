@@ -1,0 +1,26 @@
+1. Pronađite dijelove assemblerskog kôda u kojima se odvija alociranje memorije za objekte poc i *pb.
+- poc: linija 145
+- *pb: linija 154 preko new naredbe, pa linija 115
+
+2. Objasnite razliku u načinu alociranja tih objekata.
+- poc: bez konstruktora
+- *pb: sa konstruktorom
+
+3. Pronađite dio assemblerskog kôda koji je zadužen za poziv konstruktora objekta poc, ako takav poziv postoji.
+- poc je kreiran bez konstruktora
+
+4. Pronađite dio assemblerskog kôda koji je zadužen za poziv konstruktora objekta *pb. Razmotrite kako se točno izvršava taj kôd. Što se u njemu događa?
+- linija 154 -> poziva se konstruktor CoolClass
+- linija 115 -> alocira se memorija
+- linija 119 -> poziva se konstruktor Base
+- potprogram konstruktora Base -> kreira se vtable klase Base
+- potprogram konstruktora CoolClass -> kreira se vtable klase CoolClass
+- povratak u main
+
+5. Promotrite kako je prevoditelj izveo pozive pb->set i poc.set. Objasnite razliku između izvedbi tih dvaju poziva. Koji od ta dva poziva zahtijeva manje instrukcija? Za koju od te dvije izvedbe bi optimirajući prevoditelj mogao generirati kôd bez instrukcije CALL odnosno izravno umetnuti implementaciju funkcije (eng. inlining)?
+- poc.set(42); - Ne zahtjeva pristup virtualnoj tablici
+- pb->set(42); - Zahtjeva pristup virtualnoj tablici
+
+6. Pronađite asemblerski kôd za definiciju i inicijalizaciju tablice virtualnih funkcija razreda CoolClass.
+- Inicijalizacija u konstruktoru na liniji 120
+- Definicija kod oznake "vtable for CoolClass" na linijama 185-194.

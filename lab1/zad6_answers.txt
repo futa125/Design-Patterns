@@ -1,0 +1,14 @@
+Metoda kaze: ja sam bazna implementacija!
+Metoda kaze: ja sam izvedena implementacija!
+Metoda kaze: ja sam izvedena implementacija!
+
+1. Poziva se konstruktor Derived()
+2. Poziva se konstruktor Base()
+3. Postavlja se vtable klase Base()
+4. Poziva se Base::metoda() u konstruktoru Base()
+5. Poziva se methoda iz virtualne tablice klase Base() // Metoda kaze: ja sam bazna implementacija!
+6. Postavlja se vtable klase Derived()
+7. Poziva se Base::metoda() u konstruktoru Derived()
+8. Poziva se methoda iz virtualne tablice klase Derived() // Metoda kaze: ja sam izvedena implementacija!
+9. Poziva se Base::metoda() u funkciji main
+10. Poziva se methoda iz virtualne tablice klase Derived() // Metoda kaze: ja sam izvedena implementacija!
