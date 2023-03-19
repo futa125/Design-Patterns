@@ -24,8 +24,8 @@ typedef int (*PFUN2)(B*, int);
 void printReturnValues(B* pb) {
     uintptr_t vtable_address = *(uintptr_t*)pb;
 
-    PFUN1 fn1 = *reinterpret_cast<PFUN1*>(vtable_address)[0];
-    PFUN2 fn2 = *reinterpret_cast<PFUN2*>(vtable_address)[1];
+    PFUN1 fn1 = reinterpret_cast<PFUN1*>(vtable_address)[0];
+    PFUN2 fn2 = reinterpret_cast<PFUN2*>(vtable_address)[1];
 
     cout << fn1(pb) << endl;
     cout << fn2(pb, 5) << endl;
