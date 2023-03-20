@@ -121,8 +121,7 @@ int main() {
     p1.vtable = &dogFunctions;
 
     struct Animal p2;
-    p2.name = "Ofelija";
-    p2.vtable = &catFunctions;
+    constructCat(&p2, "Ofelija");
 
     struct Animal p3;
     p3.name = "Polonije";
