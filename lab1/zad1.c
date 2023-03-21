@@ -4,13 +4,25 @@
 typedef char const* (*PTRFUN)();
 
 struct Animal {
-    char const* name;
     struct AnimalFunctions* vtable;
+    char const* name;
+};
+
+struct ProducingAnimal {
+    struct ProducingAnimalFunctions* vtable;
+    char const* name;
+    char const* species;
 };
 
 struct AnimalFunctions {
     PTRFUN greet;
     PTRFUN menu;
+};
+
+struct ProducingAnimalFunctions {
+    PTRFUN greet;
+    PTRFUN menu;
+    PTRFUN produce;
 };
 
 const char* dogGreet() {
@@ -29,6 +41,18 @@ const char* catMenu() {
     return "konzerviranu tunjevinu";
 }
 
+const char* cowGreet() {
+    return "moo!";
+}
+
+const char* cowMenu() {
+    return "trava";
+}
+
+const char* cowProduces() {
+    return "milk";
+}
+
 struct AnimalFunctions dogFunctions = {
     &dogGreet,
     &dogMenu,
@@ -39,6 +63,12 @@ struct AnimalFunctions catFunctions = {
     &catMenu,
 };
 
+struct ProducingAnimalFunctions cowFunctions = {
+    &cowGreet,
+    &cowMenu,
+    &cowProduces,
+};
+
 void constructDog(struct Animal* dog, const char* name) {
     dog->name = name;
     dog->vtable = &dogFunctions;
@@ -47,6 +77,12 @@ void constructDog(struct Animal* dog, const char* name) {
 void constructCat(struct Animal* cat, const char* name) {
     cat->name = name;
     cat->vtable = &catFunctions;
+}
+
+void constructCow(struct ProducingAnimal* cow, const char* name, const char* species) {
+    cow->name = name;
+    cow->species = species;
+    cow->vtable = &cowFunctions;
 }
 
 struct Animal* createDog(const char* name) {
@@ -65,6 +101,14 @@ struct Animal* createCat(char const* name) {
     return cat;
 }
 
+struct ProducingAnimal* createCow(char const* name, char const* species) {
+    struct ProducingAnimal* cow = malloc(sizeof(struct ProducingAnimal));
+
+    constructCow(cow, name, species);
+
+    return cow;
+}
+
 void animalPrintGreeting(const struct Animal* animal) {
     printf("%s pozdravlja: %s\n", animal->name, animal->vtable->greet());
 }
@@ -77,10 +121,12 @@ void testAnimals() {
     struct Animal* p1 = createDog("Hamlet");
     struct Animal* p2 = createCat("Ofelija");
     struct Animal* p3 = createDog("Polonije");
+    struct ProducingAnimal* p4 = createCow("milka", "krava");
 
     animalPrintGreeting(p1);
     animalPrintGreeting(p2);
     animalPrintGreeting(p3);
+    animalPrintGreeting((struct Animal*)p4);
 
     animalPrintMenu(p1);
     animalPrintMenu(p2);
@@ -121,7 +167,8 @@ int main() {
     p1.vtable = &dogFunctions;
 
     struct Animal p2;
-    constructCat(&p2, "Ofelija");
+    p2.name = "Ofelija";
+    p2.vtable = &catFunctions;
 
     struct Animal p3;
     p3.name = "Polonije";
