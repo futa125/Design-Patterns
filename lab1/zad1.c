@@ -143,7 +143,7 @@ struct Animal* createNDogs(int n) {
 
     for (int i = 0; i < n; i++) {
         asprintf(&name, "Dog %d", i + 1);
-        dogs[i] = *(createDog(name));
+        constructDog(&dogs[i], name);
     }
 
     return dogs;
