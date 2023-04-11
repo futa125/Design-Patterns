@@ -1,11 +1,11 @@
 import math
 import random
-
-import numpy as np
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import List, Iterable, Generator
+from typing import List
+
+import numpy as np
 
 
 class DistributionGenerator(ABC):
