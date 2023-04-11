@@ -66,7 +66,7 @@ class Expression:
     value: str
     referenced_addresses: Set[Address] = field(default_factory=set, init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for reference in re.findall("[A-Z][1-9]\\d*", self.value):
             self.referenced_addresses.add(Address(reference))
 
@@ -83,24 +83,24 @@ class Cell(Subject, Observer):
     value: int = field(init=False)
     expression: Expression
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self._evaluate()
 
     def set(self, expression: Expression) -> None:
         self.expression = expression
         self._evaluate()
 
-    def attach(self, observer: Observer):
+    def attach(self, observer: Observer) -> None:
         self._observers.add(observer)
 
-    def detach(self, observer: Observer):
+    def detach(self, observer: Observer) -> None:
         self._observers.remove(observer)
 
-    def notify(self):
+    def notify(self) -> None:
         for observer in self._observers:
             observer.update()
 
-    def update(self):
+    def update(self) -> None:
         self._evaluate()
 
     def _evaluate(self) -> None:
@@ -138,29 +138,14 @@ class Sheet:
     def set(self, address: Address, expression: Expression) -> None:
         logging.debug(f"Set value of {address} to {expression}")
 
-        if self.cell(address) is None:
-            current_referenced_addresses = set()
-            self._cells[address] = Cell(self, address, expression)
-        else:
-            current_referenced_addresses = self.cell(address).expression.referenced_addresses
+        self._check_for_cycles(self.cell(address), expression)
 
-        old_referenced_addresses = current_referenced_addresses.difference(expression.referenced_addresses)
-        new_referenced_addresses = expression.referenced_addresses.difference(current_referenced_addresses)
-
-        self._check_for_cycles(address, expression)
-
-        for old_address in old_referenced_addresses:
-            self.cell(old_address).detach(self.cell(address))
-            logging.debug(f"Cell {address} is no longer observing {old_address}")
-
-        for new_address in new_referenced_addresses:
-            self.cell(new_address).attach(self.cell(address))
-            logging.debug(f"Cell {address} is now observing {new_address}")
+        self._update_observers(address, expression)
 
         self.cell(address).set(expression)
 
-    def evaluate(self, cell: Cell) -> complex | int:
-        def _eval(node: ast.expr) -> complex | int:
+    def evaluate(self, cell: Cell) -> int:
+        def _eval(node: ast.expr) -> int:
             if isinstance(node, ast.Num):
                 return node.n
             elif isinstance(node, ast.Name):
@@ -174,9 +159,13 @@ class Sheet:
 
         return _eval(ast_node.body)
 
-    def _check_for_cycles(self, address: Address, expression: Expression) -> None:
-        start_cell = self.cell(address)
+    def get_refs(self, address: Address) -> Set[Address]:
+        if self.cell(address) is None:
+            return set()
 
+        return self.cell(address).expression.referenced_addresses
+
+    def _check_for_cycles(self, start_cell: Cell, expression: Expression) -> None:
         referenced_cells = set([self.cell(ref) for ref in expression.referenced_addresses])
         visited_cells = set()
 
@@ -190,6 +179,24 @@ class Sheet:
 
         if start_cell in visited_cells:
             raise ValueError(f"Circular reference detected")
+
+    def _update_observers(self, address: Address, expression: Expression):
+        if self.cell(address) is None:
+            self._cells[address] = Cell(self, address, expression)
+            current_referenced_addresses = set()
+        else:
+            current_referenced_addresses = self.cell(address).expression.referenced_addresses
+
+        old_referenced_addresses = current_referenced_addresses.difference(expression.referenced_addresses)
+        new_referenced_addresses = expression.referenced_addresses.difference(current_referenced_addresses)
+
+        for old_address in old_referenced_addresses:
+            self.cell(old_address).detach(self.cell(address))
+            logging.debug(f"Cell {address} is no longer observing {old_address}")
+
+        for new_address in new_referenced_addresses:
+            self.cell(new_address).attach(self.cell(address))
+            logging.debug(f"Cell {address} is now observing {new_address}")
 
     def __repr__(self) -> str:
         output = ""
@@ -246,6 +253,9 @@ def main() -> None:
     print(s)
 
     s.set(Address("A1"), Expression("6"))
+    print(s)
+
+    s.set(Address("B3"), Expression("A1+A4+3"))
     print(s)
 
 

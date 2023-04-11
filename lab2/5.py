@@ -6,19 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
 from statistics import median
-from typing import List, Any, Union
-
-
-@dataclass
-class Observer(ABC):
-    subject: Subject
-
-    def __post_init__(self):
-        self.subject.attach(self)
-
-    @abstractmethod
-    def update(self) -> None:
-        pass
+from typing import List, Union
 
 
 class NumberSourceStatus(Enum):
@@ -31,25 +19,24 @@ class NumberSource(ABC):
         pass
 
 
+@dataclass
+class Observer(ABC):
+    @abstractmethod
+    def update(self, state: List[int]) -> None:
+        pass
+
+
 class Subject(ABC):
     @abstractmethod
-    def get_state(self) -> List:
+    def attach(self, *observers: Observer) -> None:
         pass
 
     @abstractmethod
-    def update_state(self, state: Any) -> None:
+    def detach(self, *observers: Observer) -> None:
         pass
 
     @abstractmethod
-    def attach(self, observer: Observer):
-        pass
-
-    @abstractmethod
-    def detach(self, observer: Observer):
-        pass
-
-    @abstractmethod
-    def notify(self):
+    def notify(self) -> None:
         pass
 
 
@@ -57,33 +44,31 @@ class Subject(ABC):
 class FileLogger(Observer):
     _file_path: str
 
-    def __post_init__(self):
-        self.subject.attach(self)
-
+    def __post_init__(self) -> None:
         with open(self._file_path, "a") as file:
             file.write(f"Logging started at {datetime.now()}\n")
 
-    def update(self) -> None:
+    def update(self, state: List[int]) -> None:
         with open(self._file_path, "a") as file:
-            file.write(f"{datetime.now()}: {', '.join(map(str, self.subject.get_state()))}\n")
+            file.write(f"{datetime.now()}: {', '.join(map(str, state))}\n")
 
 
 @dataclass
 class SumPrinter(Observer):
-    def update(self) -> None:
-        print(f"Sum: {sum(self.subject.get_state())}")
+    def update(self, state: List[int]) -> None:
+        print(f"Sum: {sum(state)}")
 
 
 @dataclass
 class AveragePrinter(Observer):
-    def update(self) -> None:
-        print(f"Average: {sum(self.subject.get_state()) / len(self.subject.get_state()):.2f}")
+    def update(self, state: List[int]) -> None:
+        print(f"Average: {sum(state) / len(state):.2f}")
 
 
 @dataclass
 class MedianPrinter(Observer):
-    def update(self) -> None:
-        print(f"Median: {median(self.subject.get_state()):.2f}")
+    def update(self, state: List[int]) -> None:
+        print(f"Median: {median(state):.2f}")
 
 
 @dataclass
@@ -106,8 +91,8 @@ class KeyboardSource(NumberSource):
 
 @dataclass
 class FileSource(NumberSource):
-    _file_path: str
     _numbers: List[int] = field(init=False, default_factory=list)
+    _file_path: str
 
     def __post_init__(self) -> None:
         with open(self._file_path, "r") as file:
@@ -137,24 +122,19 @@ class NumberSequence(Subject):
     _numbers: List[int] = field(default_factory=list, init=False)
     _number_source: NumberSource
 
-    def attach(self, observer: Observer):
-        self._observers.append(observer)
+    def attach(self, *observers: Observer) -> None:
+        for observer in observers:
+            self._observers.append(observer)
 
-    def detach(self, observer: Observer):
-        self._observers.remove(observer)
+    def detach(self, *observers: Observer) -> None:
+        for observer in observers:
+            self._observers.remove(observer)
 
-    def notify(self):
+    def notify(self) -> None:
         for observer in self._observers:
-            observer.update()
+            observer.update(self._numbers)
 
-    def get_state(self) -> List[int]:
-        return self._numbers
-
-    def update_state(self, value: int) -> None:
-        self._numbers.append(value)
-        self.notify()
-
-    def start_generating(self):
+    def start_generating(self) -> None:
         while True:
             n = self._number_source.generate_number()
             print(f"Generated number: {n}")
@@ -162,24 +142,23 @@ class NumberSequence(Subject):
             if n == NumberSourceStatus.SOURCE_EXHAUSTED:
                 break
 
-            self.update_state(n)
+            self._numbers.append(n)
+            self.notify()
 
             time.sleep(1)
 
 
 def main() -> None:
     seq = NumberSequence(KeyboardSource())
-    FileLogger(seq, "output.log")
-    SumPrinter(seq)
-    AveragePrinter(seq)
-    MedianPrinter(seq)
+    file_logger = FileLogger("output.log")
+    sum_printer = SumPrinter()
+    average_printer = AveragePrinter()
+    median_printer = MedianPrinter()
+    seq.attach(file_logger, sum_printer, average_printer, median_printer)
     seq.start_generating()
 
     seq = NumberSequence(FileSource("input.txt"))
-    FileLogger(seq, "output.log")
-    SumPrinter(seq)
-    AveragePrinter(seq)
-    MedianPrinter(seq)
+    seq.attach(file_logger, sum_printer, average_printer, median_printer)
     seq.start_generating()
 
 
