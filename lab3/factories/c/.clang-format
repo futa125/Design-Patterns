@@ -1,0 +1,17 @@
+---
+# options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+BasedOnStyle: Google
+IndentWidth: 4
+
+# Alight pointer asterix to left side
+DerivePointerAlignment: false
+PointerAlignment: Left 
+
+# Don't allow 'if', 'while' and similar statements without braces
+InsertBraces: true 
+
+# Don't allow one-line functions
+AllowShortFunctionsOnASingleLine: false
+
+# No max line length
+ColumnLimit: 0
